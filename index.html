@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jayasundara Construction | Quality Building Solutions</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=typography,aspect-ratio"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/scrollreveal"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+
+        .hero-gradient { background: linear-gradient(135deg, #7c2d12 0%, #b45309 70%, #f97316 100%); } /* orange-900 -> amber-700 -> orange-500 */
+        .stats-gradient { background: linear-gradient(135deg, #451a03 0%, #7c2d12 100%); } /* amber-950 -> orange-900 */
+
+        .card-hover { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+
+        #p5-hero-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.1; pointer-events: none; }
+        .hero-content { position: relative; z-index: 10; }
+
+        .float-element { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; } /* amber-400 */
+        ::-webkit-scrollbar-thumb:hover { background: #f59e0b; } /* amber-500 */
+
+        .nav-link-active { color: #f97316; font-weight: 600; } /* orange-500 */
+
+        .timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; background-color: #e2e8f0; transform: translateX(-50%); }
+        .timeline-item { position: relative; width: 50%; padding-bottom: 40px; }
+        .timeline-item:nth-child(odd) { padding-right: 40px; text-align: right; }
+        .timeline-item:nth-child(even) { left: 50%; padding-left: 40px; text-align: left; }
+        .timeline-item::after { content: ''; position: absolute; width: 18px; height: 18px; background-color: white; border: 4px solid #fb923c; top: 5px; border-radius: 50%; z-index: 1; } /* orange-400 */
+        .timeline-item:nth-child(odd)::after { right: -9px; transform: translateX(50%); }
+        .timeline-item:nth-child(even)::after { left: -9px; transform: translateX(-50%); }
+
+        @media (max-width: 768px) {
+            .timeline::before { left: 9px; transform: translateX(0); }
+            .timeline-item { width: 100%; padding-left: 40px; padding-right: 10px; text-align: left; }
+            .timeline-item:nth-child(odd), .timeline-item:nth-child(even) { left: 0; padding-left: 40px; text-align: left; }
+            .timeline-item:nth-child(odd)::after, .timeline-item:nth-child(even)::after { left: 0; }
+        }
+
+        *:focus-visible { outline: 2px solid #fb923c; outline-offset: 2px; } /* orange-400 */
+        input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: #f97316 !important; box-shadow: 0 0 0 1px #f97316 !important; } /* orange-500 */
+    </style>
+</head>
+<body x-data="{ isMobileMenuOpen: false, scrolled: false }" @scroll.window="scrolled = (window.scrollY > 50)"
+      class="antialiased text-slate-700 bg-white leading-relaxed">
+
+    <nav :class="{ 'bg-white/95 shadow-md backdrop-blur-sm py-3': scrolled, 'bg-transparent py-5': !scrolled }"
+         class="fixed w-full z-50 transition-all duration-300 ease-in-out">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <a href="#home" class="flex items-center space-x-2">
+                         <i class="fas fa-drafting-compass text-3xl" :class="scrolled ? 'text-orange-500' : 'text-white'"></i>
+                         <span class="text-2xl font-bold tracking-tight" :class="scrolled ? 'text-slate-900' : 'text-white'">Jayasundara<span class="font-light text-orange-500"> Construction</span></span>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-1 lg:space-x-3">
+                    <a href="#home" class="px-3 lg:px-4 py-2 font-medium text-sm transition-colors duration-200 rounded-md" :class="scrolled ? 'text-slate-700 hover:text-orange-600 hover:bg-orange-50' : 'text-slate-100 hover:text-white hover:bg-white/10'">Home</a>
+                    <a href="#services" class="px-3 lg:px-4 py-2 font-medium text-sm transition-colors duration-200 rounded-md" :class="scrolled ? 'text-slate-700 hover:text-orange-600 hover:bg-orange-50' : 'text-slate-100 hover:text-white hover:bg-white/10'">Services</a>
+                    <a href="#projects" class="px-3 lg:px-4 py-2 font-medium text-sm transition-colors duration-200 rounded-md" :class="scrolled ? 'text-slate-700 hover:text-orange-600 hover:bg-orange-50' : 'text-slate-100 hover:text-white hover:bg-white/10'">Projects</a>
+                    <a href="#about" class="px-3 lg:px-4 py-2 font-medium text-sm transition-colors duration-200 rounded-md" :class="scrolled ? 'text-slate-700 hover:text-orange-600 hover:bg-orange-50' : 'text-slate-100 hover:text-white hover:bg-white/10'">About</a>
+                    <a href="#testimonials" class="px-3 lg:px-4 py-2 font-medium text-sm transition-colors duration-200 rounded-md" :class="scrolled ? 'text-slate-700 hover:text-orange-600 hover:bg-orange-50' : 'text-slate-100 hover:text-white hover:bg-white/10'">Testimonials</a>
+                    <a href="#contact" class="ml-3 bg-orange-500 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm hover:shadow-md">Get a Quote</a>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="inline-flex items-center justify-center p-2 rounded-md focus:outline-none transition duration-150 ease-in-out" :class="scrolled ? 'text-slate-700 hover:text-orange-600' : 'text-slate-100 hover:text-white'">
+                        <i class="fas text-xl" :class="isMobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div x-show="isMobileMenuOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+             class="md:hidden bg-white shadow-lg absolute w-full border-t border-slate-100">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50">Home</a>
+                <a href="#services" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50">Services</a>
+                <a href="#projects" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50">Projects</a>
+                <a href="#about" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50">About</a>
+                <a href="#testimonials" @click="isMobileMenuOpen = false" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-orange-600 hover:bg-orange-50">Testimonials</a>
+                <a href="#contact" @click="isMobileMenuOpen = false" class="block w-full mt-2 text-left px-4 py-3 rounded-md text-base font-medium text-white bg-orange-500 hover:bg-orange-600">Get a Quote</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="relative hero-gradient text-white pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden">
+        <div id="p5-hero-background"></div>
+        <div class="hero-content max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center">
+                <div class="reveal-left">
+                    <span class="inline-block bg-white/10 text-orange-100 px-4 py-1 rounded-full text-xs font-medium mb-4 uppercase tracking-wider">Quality Construction <br> Since 2010</span>
+                    <h1 class="text-4xl sm:text-5xl xl:text-6xl font-bold mb-6 leading-tight tracking-tight">
+                        Building Sri Lanka's Future,<br> Project by Project.
+                    </h1>
+                    <p class="text-lg text-orange-100/90 mb-10 max-w-xl">
+                        Jayasundara Construction: Your dedicated partner for exceptional building solutions across Sri Lanka. We bring integrity, quality, and innovation to every structure we build.
+                    </p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="#contact" class="inline-block bg-white text-orange-700 px-7 py-3 rounded-md font-semibold text-base hover:bg-orange-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 text-center">
+                            Request Consultation
+                        </a>
+                        <a href="#projects" class="inline-block border-2 border-white/80 text-white px-7 py-3 rounded-md font-semibold text-base hover:bg-white hover:text-orange-700 transition-all duration-300 text-center">
+                            View Our Work <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="relative reveal-right mt-10 lg:mt-0">
+                     <img src="https://images.unsplash.com/photo-1519756301029-33fef7098ba4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+                         alt="Modern architectural design and construction site"
+                         class="rounded-lg shadow-xl w-full aspect-square object-cover float-element">
+                    <div class="absolute -bottom-6 -left-6 bg-gradient-to-br from-yellow-300 to-amber-400 p-4 rounded-lg shadow-lg hidden md:block transform -rotate-3">
+                        <div class="text-2xl font-bold text-slate-800">10+</div>
+                        <div class="font-medium text-xs text-slate-700">Years Experience</div>
+                    </div>
+                    <div class="absolute -top-6 -right-6 bg-white p-4 rounded-lg shadow-lg hidden md:block transform rotate-2">
+                        <div class="text-2xl font-bold text-orange-700" id="projects-count-hero">0+</div>
+                        <div class="font-medium text-xs text-slate-600">Projects Delivered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-center text-slate-500 text-sm font-semibold uppercase tracking-wider mb-10 reveal-fade-up">Proudly Partnering With Industry Leaders</h3>
+    
+            <div class="relative">
+                <div class="flex items-center gap-x-10 md:gap-x-16 overflow-x-auto pb-4 custom-scrollbar">
+    
+                    <div class="flex flex-col items-center flex-shrink-0 text-center group w-32">
+                        <img src="img/metropolitan-logo.png" alt="Metropolitan Group Logo"
+                             class="h-16 md:h-20 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="mt-3 text-xs md:text-sm font-medium text-slate-600 font-poppins">Metropolitan Group</p>
+                    </div>
+    
+                    <div class="flex flex-col items-center flex-shrink-0 text-center group w-32">
+                        <img src="img/nchs-logo.png" alt="NCHS Logo" class="h-16 md:h-20 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="mt-3 text-xs md:text-sm font-medium text-slate-600 font-poppins">NCHS</p> </div>
+    
+                    <div class="flex flex-col items-center flex-shrink-0 text-center group w-32">
+                        <img src="img/esoft-logo.png" alt="Esoft Metro Campus Logo"
+                             class="h-16 md:h-20 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="mt-3 text-xs md:text-sm font-medium text-slate-600 font-poppins">Esoft Metro Campus</p>
+                    </div>
+    
+                    <div class="flex flex-col items-center flex-shrink-0 text-center group w-32">
+                        <img src="img/hnb-logo.png" alt="HNB Bank Logo"
+                             class="h-16 md:h-20 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="mt-3 text-xs md:text-sm font-medium text-slate-600 font-poppins">HNB Bank</p>
+                    </div>
+    
+                    <div class="flex flex-col items-center flex-shrink-0 text-center group w-32">
+                        <img src="img/slt-mobitel-logo.png" alt="SLT-Mobitel Logo"
+                              class="h-16 md:h-20 object-contain opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="mt-3 text-xs md:text-sm font-medium text-slate-600 font-poppins">SLT-Mobitel</p>
+                    </div>
+    
+                    </div> </div> </div> </section> 
+
+    <section id="services" class="py-20 lg:py-24 bg-white">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal-fade-up">
+                <span class="text-orange-600 font-semibold text-base tracking-wide">OUR EXPERTISE</span>
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mt-3 mb-4">Comprehensive Building Services</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">From initial design to final handover, we offer a complete range of construction services tailored to your needs.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-orange-100 text-orange-600 mb-5">
+                            <i class="fas fa-drafting-compass text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">Design-Build</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Integrated approach combining design and construction phases under one contract for seamless project delivery and accountability.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Single point of contact</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Faster completion</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Cost efficiency</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-orange-600 font-medium text-sm hover:text-orange-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden" style="transition-delay: 0.05s;">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-orange-100 text-orange-600 mb-5">
+                            <i class="fas fa-hard-hat text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">General Contracting</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Managing day-to-day site operations, vendors, and subcontractors to ensure quality, safety, and adherence to schedule.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Expert project execution</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Quality & safety focus</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> On-time delivery</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-orange-600 font-medium text-sm hover:text-orange-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden" style="transition-delay: 0.1s;">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-orange-100 text-orange-600 mb-5">
+                            <i class="fas fa-clipboard-list text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">Construction Management</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Providing professional oversight and advisory services throughout the project lifecycle, from planning to closeout.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Strategic planning</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Cost & schedule control</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Risk management</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-orange-600 font-medium text-sm hover:text-orange-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden" style="transition-delay: 0.15s;">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-orange-100 text-orange-600 mb-5">
+                            <i class="fas fa-tools text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">Renovation & Remodeling</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Transforming existing spaces with high-quality renovations, additions, and remodeling for various property types.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Residential upgrades</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Commercial fit-outs</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Modernization</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-orange-600 font-medium text-sm hover:text-orange-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden" style="transition-delay: 0.2s;">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-orange-100 text-orange-600 mb-5">
+                            <i class="fas fa-pencil-ruler text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">Pre-Construction Planning</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Essential planning phase including feasibility studies, site analysis, budgeting, and value engineering for project success.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Feasibility studies</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Value engineering</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-orange-500 mr-2 text-xs"></i> Detailed budgeting</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-orange-600 font-medium text-sm hover:text-orange-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-sm border border-slate-100 reveal-scale-up overflow-hidden" style="transition-delay: 0.25s;">
+                    <div class="p-8">
+                         <div class="flex items-center justify-center h-14 w-14 rounded-full bg-teal-100 text-teal-600 mb-5">
+                            <i class="fas fa-leaf text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-900 mb-3">Sustainable & Green Building</h3>
+                        <p class="text-slate-600 mb-5 text-sm leading-relaxed">Implementing eco-friendly practices and materials to create energy-efficient, healthy, and sustainable structures.</p>
+                        <ul class="space-y-1.5 text-sm text-slate-600">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-teal-500 mr-2 text-xs"></i> Green materials sourcing</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-teal-500 mr-2 text-xs"></i> Energy efficiency focus</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-teal-500 mr-2 text-xs"></i> Waste reduction</li>
+                        </ul>
+                         <a href="#contact" class="inline-block mt-5 text-teal-600 font-medium text-sm hover:text-teal-800 group">Learn More <i class="fas fa-arrow-right ml-1 text-xs transform group-hover:translate-x-1 transition-transform"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="py-20 lg:py-24 bg-slate-100">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal-fade-up">
+                <span class="text-orange-600 font-semibold text-base tracking-wide">OUR PORTFOLIO</span>
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mt-3 mb-4">Featured Projects</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">A glimpse into our diverse capabilities and commitment to delivering exceptional results.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
+                <div class="card-hover bg-white rounded-lg shadow-md overflow-hidden reveal-scale-up group">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+                             alt="Modern commercial office building exterior"
+                             class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-5">
+                             <span class="inline-block px-3 py-1 bg-orange-600 text-white text-xs font-semibold rounded-full mb-2 uppercase tracking-wider">Commercial</span>
+                            <h3 class="text-lg font-semibold text-white">City Business Center</h3>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-slate-600 text-sm mb-4 line-clamp-2">A modern 10-story commercial complex featuring retail spaces and corporate offices in Colombo.</p>
+                        <div class="flex justify-between items-center text-xs text-slate-500 mb-4">
+                            <span><i class="fas fa-map-marker-alt mr-1 text-orange-500"></i> Colombo, Sri Lanka</span>
+                            <span><i class="fas fa-calendar-alt mr-1 text-orange-500"></i> 2024</span>
+                        </div>
+                        <a href="#" class="text-orange-600 font-medium text-sm hover:text-orange-800 inline-flex items-center">View Details <i class="fas fa-arrow-right ml-1.5 text-xs"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-md overflow-hidden reveal-scale-up group" style="transition-delay: 0.05s;">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80"
+                             alt="Luxury residential villa exterior"
+                             class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-105">
+                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-5">
+                             <span class="inline-block px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded-full mb-2 uppercase tracking-wider">Residential</span>
+                            <h3 class="text-lg font-semibold text-white">Coastal Breeze Villa</h3>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-slate-600 text-sm mb-4 line-clamp-2">An exclusive beachfront property blending modern design with traditional Sri Lankan architectural elements.</p>
+                         <div class="flex justify-between items-center text-xs text-slate-500 mb-4">
+                            <span><i class="fas fa-map-marker-alt mr-1 text-amber-500"></i> Galle, Sri Lanka</span>
+                            <span><i class="fas fa-calendar-alt mr-1 text-amber-500"></i> 2023</span>
+                        </div>
+                        <a href="#" class="text-amber-600 font-medium text-sm hover:text-amber-800 inline-flex items-center">View Details <i class="fas fa-arrow-right ml-1.5 text-xs"></i></a>
+                    </div>
+                </div>
+                <div class="card-hover bg-white rounded-lg shadow-md overflow-hidden reveal-scale-up group" style="transition-delay: 0.1s;">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1576941089067-2de3c901e126?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1278&q=80"
+                             alt="Renovated community center interior"
+                             class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-105">
+                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-0 left-0 p-5">
+                             <span class="inline-block px-3 py-1 bg-teal-600 text-white text-xs font-semibold rounded-full mb-2 uppercase tracking-wider">Renovation</span>
+                            <h3 class="text-lg font-semibold text-white">Giriulla Community Hall</h3>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-slate-600 text-sm mb-4 line-clamp-2">Modernization and expansion of a vital community space, improving accessibility and functionality.</p>
+                        <div class="flex justify-between items-center text-xs text-slate-500 mb-4">
+                            <span><i class="fas fa-map-marker-alt mr-1 text-teal-500"></i> Giriulla, Sri Lanka</span>
+                            <span><i class="fas fa-calendar-alt mr-1 text-teal-500"></i> 2024</span>
+                        </div>
+                        <a href="#" class="text-teal-600 font-medium text-sm hover:text-teal-800 inline-flex items-center">View Details <i class="fas fa-arrow-right ml-1.5 text-xs"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-16 text-center reveal-fade-up">
+                <a href="#" class="inline-flex items-center px-7 py-3 border border-transparent text-base font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-300 transform hover:-translate-y-1">
+                    <i class="fas fa-th-large mr-2"></i> View Full Portfolio
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 lg:py-20 stats-gradient text-white">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div class="text-center mb-12 reveal-fade-up">
+                 <h2 class="text-3xl md:text-4xl font-semibold mb-3">Our Journey in Numbers</h2>
+                 <p class="text-lg text-orange-100/90 max-w-2xl mx-auto">Milestones reflecting our commitment and growth.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 text-center">
+                <div class="reveal-scale-up p-6">
+                    <div class="text-4xl lg:text-5xl font-bold text-orange-300 mb-2" id="projects-counter">150</div>
+                    <div class="text-base font-medium text-orange-100">Projects Completed</div>
+                </div>
+                <div class="reveal-scale-up p-6" style="transition-delay: 0.05s;">
+                    <div class="text-4xl lg:text-5xl font-bold text-amber-300 mb-2" id="clients-counter">95</div>
+                    <div class="text-base font-medium text-orange-100">Satisfied Clients</div>
+                </div>
+                <div class="reveal-scale-up p-6" style="transition-delay: 0.1s;">
+                    <div class="text-4xl lg:text-5xl font-bold text-yellow-300 mb-2" id="experience-counter">25</div>
+                    <div class="text-base font-medium text-orange-100">Years of Experience</div>
+                </div>
+                <div class="reveal-scale-up p-6" style="transition-delay: 0.15s;">
+                    <div class="text-4xl lg:text-5xl font-bold text-lime-300 mb-2" id="awards-counter">15</div>
+                    <div class="text-base font-medium text-orange-100">Industry Awards</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-20 lg:py-24 bg-white">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center">
+                <div class="relative reveal-left">
+                    <div class="aspect-w-4 aspect-h-3 lg:aspect-w-1 lg:aspect-h-1 xl:aspect-w-4 xl:aspect-h-3">
+                        <img src="Img\Construction team meeting with blueprints.png"
+                             alt="Jayasundara Construction team meeting with blueprints"
+                             class="object-cover rounded-lg shadow-xl w-full h-full">
+                    </div>
+                    <div class="absolute -bottom-5 -right-5 bg-orange-500 p-4 rounded-full shadow-lg hidden lg:flex items-center justify-center">
+                        <i class="fas fa-users text-2xl text-white"></i>
+                    </div>
+                </div>
+                <div class="reveal-right">
+                    <span class="text-orange-600 font-semibold text-base tracking-wide">ABOUT US</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-6">Building Sri Lanka with Dedication & Expertise</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        Since [Start Year], Jayasundara Construction has been a cornerstone of quality building in Sri Lanka. We blend time-honored craftsmanship with modern techniques, driven by integrity and a passion for exceeding client expectations.
+                    </p>
+                    <div class="space-y-5 mb-8 text-slate-700">
+                         <div class="flex items-start space-x-3">
+                             <i class="fas fa-bullseye text-orange-500 text-lg mt-1 flex-shrink-0"></i>
+                             <div>
+                                 <h4 class="font-semibold">Our Mission</h4>
+                                 <p class="text-sm">To deliver superior construction solutions through collaboration, innovation, and unwavering commitment to quality and client satisfaction.</p>
+                             </div>
+                         </div>
+                         <div class="flex items-start space-x-3">
+                            <i class="fas fa-eye text-orange-500 text-lg mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-semibold">Our Vision</h4>
+                                <p class="text-sm">To be the most trusted construction partner in Sri Lanka, building sustainable communities and turning visionary projects into reality.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start space-x-3">
+                            <i class="fas fa-gem text-orange-500 text-lg mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h4 class="font-semibold">Our Values</h4>
+                                <p class="text-sm">Integrity, Quality, Safety, Innovation, Collaboration.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#contact" class="inline-flex items-center px-6 py-2.5 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 transition-colors duration-300 transform hover:-translate-y-0.5">
+                        Contact Our Team
+                    </a>
+                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="process" class="py-20 lg:py-24 bg-slate-50">
+        <div class="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 lg:mb-20 reveal-fade-up">
+                <span class="text-orange-600 font-semibold text-base tracking-wide">OUR WORKFLOW</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">Our Structured Approach</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">A clear, collaborative process ensures your project is managed efficiently from concept to completion.</p>
+            </div>
+            <div class="relative timeline">
+                <div class="timeline-item reveal-left">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                         <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">1</span>
+                            <h3 class="text-lg font-semibold text-slate-800">Consultation & Discovery</h3>
+                        </div>
+                        <p class="text-sm text-slate-600">Understanding your vision, requirements, site specifics, and budget through detailed initial discussions.</p>
+                    </div>
+                </div>
+                <div class="timeline-item reveal-right">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                        <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">2</span> <h3 class="text-lg font-semibold text-slate-800">Design & Planning</h3></div><p class="text-sm text-slate-600">Developing detailed plans, specifications, and schedules, incorporating value engineering and resource planning.</p></div></div>
+                <div class="timeline-item reveal-left">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                        <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">3</span> <h3 class="text-lg font-semibold text-slate-800">Approvals & Procurement</h3></div><p class="text-sm text-slate-600">Managing permit applications and sourcing high-quality materials and skilled subcontractors efficiently.</p></div></div>
+                <div class="timeline-item reveal-right">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                        <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">4</span> <h3 class="text-lg font-semibold text-slate-800">Construction Phase</h3></div><p class="text-sm text-slate-600">Executing the build phase with expert supervision, adhering strictly to safety and quality standards.</p></div></div>
+                <div class="timeline-item reveal-left">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                        <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">5</span> <h3 class="text-lg font-semibold text-slate-800">Quality Control</h3></div><p class="text-sm text-slate-600">Implementing rigorous checks and monitoring throughout construction to ensure excellence in every detail.</p></div></div>
+                <div class="timeline-item reveal-right">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                        <div class="flex items-center mb-2">
+                             <span class="flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm mr-3">6</span> <h3 class="text-lg font-semibold text-slate-800">Handover & Support</h3></div><p class="text-sm text-slate-600">Conducting a final walkthrough for your approval, providing documentation, and ensuring a smooth handover.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonials" class="py-20 lg:py-24 bg-gradient-to-b from-white to-orange-50/50">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal-fade-up">
+                <span class="text-orange-600 font-semibold text-base tracking-wide">CLIENT FEEDBACK</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">Trusted by Clients Across Sri Lanka</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">Hear directly from those who have experienced the Jayasundara Construction difference.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-hover bg-white p-8 rounded-lg shadow-sm border border-slate-100 reveal-scale-up">
+                    <div class="flex items-center mb-4"><img class="h-12 w-12 rounded-full mr-4 object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Client Avatar 1"><div><p class="font-semibold text-slate-800">R. Perera</p><p class="text-sm text-slate-500">Business Owner, Colombo</p></div></div>
+                     <div class="text-yellow-400 mb-4 flex items-center text-sm"><i class="fas fa-star"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i></div>
+                     <blockquote class="text-slate-600 italic text-base relative"><i class="fas fa-quote-left text-orange-100 text-3xl absolute -top-2 -left-3 opacity-75 -z-10"></i>"Professional, reliable, and delivered exactly what was promised for our office complex. The Jayasundara team was excellent to work with."</blockquote>
+                </div>
+                <div class="card-hover bg-white p-8 rounded-lg shadow-sm border border-slate-100 reveal-scale-up" style="transition-delay: 0.05s;">
+                     <div class="flex items-center mb-4"><img class="h-12 w-12 rounded-full mr-4 object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Client Avatar 2"><div><p class="font-semibold text-slate-800">Dr. S. Fernando</p><p class="text-sm text-slate-500">Homeowner, Kandy</p></div></div>
+                     <div class="text-yellow-400 mb-4 flex items-center text-sm"><i class="fas fa-star"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i></div>
+                     <blockquote class="text-slate-600 italic text-base relative"><i class="fas fa-quote-left text-amber-100 text-3xl absolute -top-2 -left-3 opacity-75 -z-10"></i>"They built our dream home with such care and attention to detail. The quality is outstanding, and the process was smooth."</blockquote>
+                </div>
+                 <div class="card-hover bg-white p-8 rounded-lg shadow-sm border border-slate-100 reveal-scale-up" style="transition-delay: 0.1s;">
+                     <div class="flex items-center mb-4"><img class="h-12 w-12 rounded-full mr-4 object-cover" src="https://randomuser.me/api/portraits/men/51.jpg" alt="Client Avatar 3"><div><p class="font-semibold text-slate-800">N. Silva</p><p class="text-sm text-slate-500">Factory Manager, Gampaha</p></div></div>
+                     <div class="text-yellow-400 mb-4 flex items-center text-sm"><i class="fas fa-star"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="fas fa-star ml-0.5"></i><i class="far fa-star ml-0.5"></i></div>
+                     <blockquote class="text-slate-600 italic text-base relative"><i class="fas fa-quote-left text-teal-100 text-3xl absolute -top-2 -left-3 opacity-75 -z-10"></i>"Managed the expansion of our facility efficiently. Good communication and they kept the project on schedule."</blockquote>
+                 </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-20 lg:py-24 bg-slate-50">
+         <div class="max-w-screen-md mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal-fade-up">
+                <span class="text-orange-600 font-semibold text-base tracking-wide">QUESTIONS?</span>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">Frequently Asked Questions</h2>
+                <p class="mt-4 max-w-xl mx-auto text-lg text-slate-600">Quick answers to common inquiries about our construction services.</p>
+            </div>
+            <div class="space-y-4" x-data="{ openFaq: null }">
+                 <div class="faq-item bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden reveal-fade-up">
+                    <button @click="openFaq === 1 ? openFaq = null : openFaq = 1" class="flex justify-between items-center w-full p-5 text-left">
+                        <span class="font-medium text-slate-800">What types of projects does Jayasundara Construction handle?</span>
+                        <i class="fas text-orange-500 text-sm transition-transform duration-300" :class="{ 'rotate-180': openFaq === 1 }"></i>
+                    </button>
+                    <div x-show="openFaq === 1" x-collapse class="px-5 pb-5 pt-1 border-t border-slate-100">
+                        <p class="text-slate-600 text-sm">We handle a wide range, including residential homes (custom builds, renovations), commercial buildings (offices, shops), industrial facilities, and community projects throughout Sri Lanka.</p>
+                    </div>
+                </div>
+                 <div class="faq-item bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden reveal-fade-up">
+                     <button @click="openFaq === 2 ? openFaq = null : openFaq = 2" class="flex justify-between items-center w-full p-5 text-left"><span class="font-medium text-slate-800">What areas do you serve in Sri Lanka?</span><i class="fas text-orange-500 text-sm transition-transform duration-300" :class="{ 'rotate-180': openFaq === 2 }"></i></button>
+                     <div x-show="openFaq === 2" x-collapse class="px-5 pb-5 pt-1 border-t border-slate-100"><p class="text-slate-600 text-sm">While based in Giriulla (North Western Province), we have the capacity and experience to manage projects across various regions of Sri Lanka. Contact us to discuss your specific location.</p></div>
+                 </div>
+                 <div class="faq-item bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden reveal-fade-up">
+                     <button @click="openFaq === 3 ? openFaq = null : openFaq = 3" class="flex justify-between items-center w-full p-5 text-left"><span class="font-medium text-slate-800">How do you ensure quality?</span><i class="fas text-orange-500 text-sm transition-transform duration-300" :class="{ 'rotate-180': openFaq === 3 }"></i></button>
+                     <div x-show="openFaq === 3" x-collapse class="px-5 pb-5 pt-1 border-t border-slate-100"><p class="text-slate-600 text-sm">Quality is paramount. We use high-grade materials, employ skilled labor, follow strict quality control protocols, and conduct regular site inspections supervised by experienced engineers.</p></div>
+                 </div>
+                 <div class="faq-item bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden reveal-fade-up">
+                     <button @click="openFaq === 4 ? openFaq = null : openFaq = 4" class="flex justify-between items-center w-full p-5 text-left"><span class="font-medium text-slate-800">How do I get a quote?</span><i class="fas text-orange-500 text-sm transition-transform duration-300" :class="{ 'rotate-180': openFaq === 4 }"></i></button>
+                     <div x-show="openFaq === 4" x-collapse class="px-5 pb-5 pt-1 border-t border-slate-100"><p class="text-slate-600 text-sm">Simply contact us via phone, email, or the website form. We'll schedule a consultation to understand your needs, assess the site (if applicable), and provide a detailed, transparent estimate.</p></div>
+                 </div>
+            </div>
+         </div>
+    </section>
+
+    <section id="contact" class="py-20 lg:py-24 bg-gradient-to-b from-slate-800 to-slate-900 text-white">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 xl:gap-20 items-start">
+                <div class="reveal-left">
+                     <span class="text-orange-300 font-semibold text-base tracking-wide">GET IN TOUCH</span>
+                     <h2 class="text-3xl md:text-4xl font-bold mt-3 mb-6">Let's Discuss Your Next Project</h2>
+                     <p class="text-lg text-slate-300 mb-8 max-w-lg">
+                         Ready to start building? Contact Jayasundara Construction today. We're eager to learn about your project and explore how we can help.
+                     </p>
+                    <div class="space-y-5 mb-10 text-slate-200">
+                         <div class="flex items-start space-x-4">
+                            <i class="fas fa-map-marker-alt text-orange-300 text-xl mt-1 fa-fw"></i>
+                            <div>
+                                <h4 class="font-semibold text-white">Address</h4>
+                                <p>[Your Street Address]<br>Giriulla, North Western Province, Sri Lanka</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start space-x-4">
+                            <i class="fas fa-phone-alt text-orange-300 text-xl mt-1 fa-fw"></i>
+                            <div>
+                                <h4 class="font-semibold text-white">Phone</h4>
+                                <a href="tel:+94XXXXXXXXX" class="hover:text-white transition-colors">[Your Phone Number]</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-envelope text-orange-300 text-xl mt-1 fa-fw"></i>
+                            <div>
+                                <h4 class="font-semibold text-white">Email</h4>
+                                <a href="mailto:info@jayasundaraconstruction.lk" class="hover:text-white transition-colors">info@jayasundaraconstruction.lk</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="aspect-w-16 aspect-h-9 bg-slate-700 rounded-lg flex items-center justify-center overflow-hidden">
+                         <p class="text-slate-400">Map Area</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 lg:p-10 rounded-lg shadow-xl reveal-right">
+                    <h3 class="text-2xl font-semibold text-slate-900 mb-6">Send Us a Message</h3>
+                    <form action="#" method="POST" class="space-y-5">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                            <input type="text" name="name" id="name" required class="block w-full px-4 py-2.5 rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-slate-900 text-sm">
+                        </div>
+                         <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                            <input type="email" name="email" id="email" required class="block w-full px-4 py-2.5 rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-slate-900 text-sm">
+                        </div>
+                         <div>
+                            <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                            <input type="tel" name="phone" id="phone" required class="block w-full px-4 py-2.5 rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-slate-900 text-sm">
+                        </div>
+                        <div>
+                            <label for="service" class="block text-sm font-medium text-slate-700 mb-1">Service of Interest</label>
+                            <select id="service" name="service" class="block w-full px-4 py-2.5 rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-slate-900 text-sm bg-white">
+                                <option value="">Select a Service...</option>
+                                <option>Design-Build</option> <option>General Contracting</option> <option>Construction Management</option>
+                                <option>Renovation & Remodeling</option> <option>Pre-Construction</option> <option>Sustainable Building</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                         <div>
+                            <label for="message" class="block text-sm font-medium text-slate-700 mb-1">Message</label>
+                            <textarea id="message" name="message" rows="4" required class="block w-full px-4 py-2.5 rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 text-slate-900 text-sm"></textarea>
+                        </div>
+                         <div class="pt-2">
+                            <button type="submit" class="w-full inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition duration-300 transform hover:-translate-y-0.5">
+                                Send Inquiry <i class="fas fa-paper-plane ml-2 text-sm"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-900 text-slate-400">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-8">
+                <div class="col-span-2 lg:col-span-2 pr-8">
+                    <a href="#home" class="flex items-center space-x-2 mb-4">
+                         <i class="fas fa-drafting-compass text-2xl text-orange-500"></i>
+                         <span class="text-lg font-semibold text-white">Jayasundara Construction</span>
+                    </a>
+                    <p class="text-sm leading-relaxed">Committed to building excellence in Sri Lanka with integrity, quality craftsmanship, and innovative solutions since [Start Year].</p>
+                     <div class="flex space-x-5 mt-6">
+                        <a href="#" class="hover:text-orange-400 transition-colors"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="hover:text-orange-400 transition-colors"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="hover:text-orange-400 transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="hover:text-orange-400 transition-colors"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-white mb-4 tracking-wider uppercase">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#home" class="hover:text-orange-400 transition-colors">Home</a></li>
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">Services</a></li>
+                        <li><a href="#projects" class="hover:text-orange-400 transition-colors">Projects</a></li>
+                        <li><a href="#about" class="hover:text-orange-400 transition-colors">About Us</a></li>
+                        <li><a href="#contact" class="hover:text-orange-400 transition-colors">Contact</a></li>
+                         <li><a href="#faq" class="hover:text-orange-400 transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-white mb-4 tracking-wider uppercase">Services</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">Design-Build</a></li>
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">General Contracting</a></li>
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">Management</a></li>
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">Renovations</a></li>
+                        <li><a href="#services" class="hover:text-orange-400 transition-colors">Green Building</a></li>
+                    </ul>
+                </div>
+                <div class="col-span-2 md:col-span-1">
+                    <h4 class="text-sm font-semibold text-white mb-4 tracking-wider uppercase">Contact</h4>
+                    <ul class="space-y-3 text-sm">
+                         <li class="flex items-start space-x-2">
+                             <i class="fas fa-map-marker-alt mt-1 fa-fw text-orange-400 flex-shrink-0"></i>
+                             <span>[Your Street Address], Giriulla, Sri Lanka</span>
+                         </li>
+                         <li class="flex items-center space-x-2">
+                            <i class="fas fa-phone-alt fa-fw text-orange-400"></i>
+                            <a href="tel:+94XXXXXXXXX" class="hover:text-orange-400 transition-colors">[Your Phone Number]</a>
+                        </li>
+                         <li class="flex items-center space-x-2">
+                             <i class="fas fa-envelope fa-fw text-orange-400"></i>
+                             <a href="mailto:info@jayasundaraconstruction.lk" class="hover:text-orange-400 transition-colors">info@jayasundaraconstruction.lk</a>
+                         </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-slate-700/50 text-center text-xs">
+                <p>&copy; <span id="current-year"></span> Jayasundara Construction. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+     <button x-show="scrolled" @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
+            class="fixed bottom-5 right-5 bg-orange-500 hover:bg-orange-600 text-white h-10 w-10 rounded-full shadow-lg focus:outline-none z-40 flex items-center justify-center">
+        <i class="fas fa-arrow-up text-sm"></i>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href && href.length > 1) {
+                        const targetElement = document.querySelector(href);
+                        if (targetElement) {
+                            e.preventDefault();
+                            const alpineInstance = document.querySelector('[x-data]');
+                            if (alpineInstance && alpineInstance.__x && alpineInstance.__x.$data.isMobileMenuOpen) {
+                                alpineInstance.__x.$data.isMobileMenuOpen = false;
+                                setTimeout(() => targetElement.scrollIntoView({ behavior: 'smooth' }), 200);
+                            } else {
+                                targetElement.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }
+                    }
+                });
+            });
+
+            if (typeof ScrollReveal !== 'undefined') {
+                const sr = ScrollReveal({
+                    distance: '40px', duration: 900, easing: 'cubic-bezier(0.5, 0, 0, 1)',
+                    origin: 'bottom', reset: false, viewFactor: 0.2
+                });
+                sr.reveal('.reveal-fade-up', { interval: 80 });
+                sr.reveal('.reveal-left', { origin: 'left' });
+                sr.reveal('.reveal-right', { origin: 'right' });
+                sr.reveal('.reveal-scale-up', { scale: 0.95, interval: 100 });
+            } else { console.error("ScrollReveal not loaded."); }
+
+            function animateCounter(elementId, targetValue, duration = 2000) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                let startValue = 0; let startTime = null;
+                const formatNumber = (num) => Math.ceil(num).toLocaleString();
+                const step = (timestamp) => {
+                    if (!startTime) startTime = timestamp;
+                    const progress = timestamp - startTime;
+                    const percentage = Math.min(progress / duration, 1);
+                    startValue = percentage * targetValue;
+                    const suffix = (elementId.includes('projects') || elementId.includes('experience')) ? '+' : '';
+                    element.textContent = formatNumber(startValue) + suffix;
+                    if (percentage < 1) { requestAnimationFrame(step); }
+                    else { element.textContent = targetValue.toLocaleString() + suffix; }
+                };
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            startTime = null; requestAnimationFrame(step);
+                            observer.unobserve(element);
+                        }
+                    });
+                }, { threshold: 0.3 });
+                observer.observe(element);
+            }
+
+            animateCounter('projects-counter', 150);
+            animateCounter('clients-counter', 95);
+            animateCounter('experience-counter', 25);
+            animateCounter('awards-counter', 15);
+            animateCounter('projects-count-hero', 150, 1500);
+
+            if (typeof p5 !== 'undefined') {
+                let particles = []; const numParticles = 40;
+                let p5Instance = new p5((p) => {
+                    p.setup = () => {
+                        let canvasContainer = document.getElementById('p5-hero-background');
+                        if (!canvasContainer) return;
+                        let cnv = p.createCanvas(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+                        cnv.parent('p5-hero-background');
+                        particles = [];
+                        for (let i = 0; i < numParticles; i++) particles.push(new Particle(p));
+                        p.stroke(255, 255, 255, 50); // Adjusted stroke for orange
+                    };
+                    p.draw = () => {
+                        p.clear();
+                        particles.forEach((particle, i) => {
+                            particle.update(p); particle.display(p);
+                            for (let j = i + 1; j < particles.length; j++) {
+                                let d = p.dist(particle.pos.x, particle.pos.y, particles[j].pos.x, particles[j].pos.y);
+                                if (d < 130) {
+                                    p.strokeWeight(p.map(d, 0, 130, 1, 0));
+                                    p.line(particle.pos.x, particle.pos.y, particles[j].pos.x, particles[j].pos.y);
+                                }
+                            }
+                        });
+                        p.strokeWeight(1);
+                    };
+                    p.windowResized = () => {
+                        let canvasContainer = document.getElementById('p5-hero-background');
+                        if (!canvasContainer) return;
+                        p.resizeCanvas(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+                    };
+                });
+
+                class Particle {
+                    constructor(p) {
+                        this.pos = p.createVector(p.random(p.width), p.random(p.height));
+                        this.vel = p5.Vector.random2D().mult(p.random(0.2, 0.6));
+                        this.size = p.random(1.5, 3);
+                    }
+                    update(p) {
+                        this.pos.add(this.vel);
+                        if (this.pos.x > p.width + this.size) this.pos.x = -this.size;
+                        if (this.pos.x < -this.size) this.pos.x = p.width + this.size;
+                        if (this.pos.y > p.height + this.size) this.pos.y = -this.size;
+                        if (this.pos.y < -this.size) this.pos.y = p.height + this.size;
+                    }
+                    display(p) {
+                        p.noStroke();
+                        p.fill(255, 255, 255, 90); // Adjusted fill for orange
+                        p.circle(this.pos.x, this.pos.y, this.size);
+                    }
+                }
+            } else { console.error("p5.js library not loaded."); }
+        });
+    </script>
+
+</body>
+</html>
